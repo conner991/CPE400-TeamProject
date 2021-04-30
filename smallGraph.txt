@@ -1,0 +1,22 @@
+6
+u v w x y z
+u v 2
+u x 1
+u w 5
+v u 2
+v x 2
+v w 3
+w v 3
+w x 3
+w y 1
+w z 5
+w u 5
+x v 2
+x u 1
+x w 3
+x y 1
+y x 1
+y z 2
+y w 1
+z w 5
+z y 2
