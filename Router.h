@@ -1,6 +1,12 @@
+#ifndef __ROUTER_H__
+#define __ROUTER_H__
+
 #include <time.h>
 #include <vector>
+#include <iostream>
 #include <climits>
+#include <set>
+
 using namespace std;
 
 class Router
@@ -26,3 +32,8 @@ class Router
 
     vector<pair<Router*, int> > routerLinks;
 };
+
+
+#include "Router.cpp"
+
+#endif

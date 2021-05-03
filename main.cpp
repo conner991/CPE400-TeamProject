@@ -1,11 +1,9 @@
 
-#include "Router.h"
-#include <iostream>
-#include <climits>
-#include <set>
-#include <time.h>
 
-using namespace std;
+
+
+#include "Router.h"
+
 
 //Globals
 //double timeFinal = 0;
