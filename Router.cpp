@@ -12,12 +12,11 @@ NOTES:
 
 
 /* -----------------------------------------------------------------------------
-FUNCTION:          main() 
-DESCRIPTION:       Controls the flow of the program at the highest level
+FUNCTION:          Router() 
+DESCRIPTION:       default constructor
 RETURNS:           Nothing
 NOTES:             
 ------------------------------------------------------------------------------- */
-//default constructor
 Router::Router()
 {
      //TODO: Change variables to better reflect timeOfTravel() variables
@@ -32,12 +31,12 @@ Router::Router()
 }
 
 /* -----------------------------------------------------------------------------
-FUNCTION:          main() 
-DESCRIPTION:       Controls the flow of the program at the highest level
+FUNCTION:          Router() 
+DESCRIPTION:       parameterized constructor
 RETURNS:           Nothing
 NOTES:             
 ------------------------------------------------------------------------------- */
-//parameterized constructor
+
 Router::Router(int id, double s_prop, double loss, double band)
 {
      ID = id;
@@ -51,8 +50,8 @@ Router::Router(int id, double s_prop, double loss, double band)
 }
 
 /* -----------------------------------------------------------------------------
-FUNCTION:          main() 
-DESCRIPTION:       Controls the flow of the program at the highest level
+FUNCTION:          ~Router() 
+DESCRIPTION:       Destructor
 RETURNS:           Nothing
 NOTES:             
 ------------------------------------------------------------------------------- */
@@ -64,8 +63,8 @@ Router::~Router()
 }
 
 /* -----------------------------------------------------------------------------
-FUNCTION:          main() 
-DESCRIPTION:       Controls the flow of the program at the highest level
+FUNCTION:          newLink() 
+DESCRIPTION:       
 RETURNS:           Nothing
 NOTES:             
 ------------------------------------------------------------------------------- */
@@ -75,20 +74,24 @@ void Router::newLink(Router * newRouter, int length)
 }
 
 /* -----------------------------------------------------------------------------
-FUNCTION:          main() 
-DESCRIPTION:       Controls the flow of the program at the highest level
-RETURNS:           Nothing
+FUNCTION:          internalDelay() 
+DESCRIPTION:       
+RETURNS:           double
 NOTES:             
 ------------------------------------------------------------------------------- */
 double Router::internalDelay()
-{
-     return (delayQueueing + delayProcessing);
+{    
+     double totalDelay;
+
+     totalDelay = delayQueueing + delayProcessing;
+
+     return totalDelay;
 }
 
 /* -----------------------------------------------------------------------------
-FUNCTION:          main() 
-DESCRIPTION:       Controls the flow of the program at the highest level
-RETURNS:           Nothing
+FUNCTION:          timeOfTravel() 
+DESCRIPTION:       
+RETURNS:           double
 NOTES:             
 ------------------------------------------------------------------------------- */
 double Router::timeOfTravel(Router * dest, int packetSize)
@@ -116,9 +119,9 @@ double Router::timeOfTravel(Router * dest, int packetSize)
 }
 
 /* -----------------------------------------------------------------------------
-FUNCTION:          main() 
-DESCRIPTION:       Controls the flow of the program at the highest level
-RETURNS:           Nothing
+FUNCTION:          getID() 
+DESCRIPTION:       
+RETURNS:           int
 NOTES:             
 ------------------------------------------------------------------------------- */
 int Router::getID()
