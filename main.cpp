@@ -14,6 +14,9 @@ int destination;
 vector<Router*> networkMesh;
 vector<pair<double, int> > packetInfo;
 
+// Prototypes
+vector<pair<int, int> > shortestPath(int startID, int dest, vector<vector<pair<int, int> > > routerLinks);
+void printPath(char v, int i, vector<int> nodePath);
 
 /* -----------------------------------------------------------------------------
 FUNCTION:          main() 
