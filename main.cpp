@@ -16,9 +16,11 @@ vector<pair<double, int> > packetInfo;
 vector<pair<int, int> > dijkstra(int startID, int dest, vector<vector<pair<int, int> > > routerLinks);
 void printPath(char v, int i, vector<int> nodePath);
 void createRouters(int numOfRouters, double packetLoss);
-void function2(vector<vector<pair<int, int> > > &linkDistances, int numOfRouters);
-vector<int> function3(vector<vector<pair<int, int> > > &linkDistances, vector<int> &nodePath, int origin, int destination);
-void function4(vector<int> &nodePath, int &numOfPackets, int &lostPackets, double &timeFinal, double &packetLoss, char verbose);
+void routerDistances(vector<vector<pair<int, int> > > &linkDistances, int numOfRouters);
+vector<int> findPath(vector<vector<pair<int, int> > > &linkDistances, vector<int> &nodePath, int origin, int destination);
+void calcPacketLoss(vector<int> &nodePath, int numOfPackets, int &lostPackets, double &timeFinal, double &packetLoss, char verbose);
+void randomizeDelay(int numOfRouters);
+
 /* -----------------------------------------------------------------------------
 FUNCTION:          main() 
 DESCRIPTION:       Controls the flow of the program at the highest level
@@ -34,8 +36,8 @@ int main()
      vector<int> nodePath;
      vector<int> emptyVector;
      
-     int origin, numOfPackets = 1, lostPackets = 0, numOfRouters = 16, randMax = 100, destination;
-     double packetLoss = 0.05, timeFinal = 0;
+     int origin, packetNum = 1, lostPackets = 0, numOfRouters = 15, randMax = 100, destination;
+     double packetLoss = 0.1, timeFinal = 0;
      char input, verbose;
 
 
@@ -50,8 +52,24 @@ int main()
      if (input == 'y') {
           
           cout << "Packets to send: ";
-          cin >> numOfPackets;
+          cin >> packetNum;
      }
+
+     // Here the createRouters function establishes the 
+     // node connections
+     //createRouters(numOfRouters, packetLoss);
+     createRouters(numOfRouters, packetLoss);
+     //for (int i = 0; i < networkMesh.size(); i++){
+     //     cout << networkMesh[i]->getID() << endl;
+     //}
+
+     routerDistances(linkDistances, numOfRouters);
+     /*for (int i = 0; i < linkDistances.size(); i++){
+          cout << networkMesh[i]->getID() << endl;
+          for (int j = 0; j < linkDistances[i].size(); j++){
+               cout << linkDistances[i][j].first << ", " << linkDistances[i][j].second << endl;
+          }
+     }*/
 
      cout << "Origin ID: ";
      cin >> origin;
@@ -59,40 +77,31 @@ int main()
      cout << "Destination ID: ";
      cin >> destination;
 
+     nodePath = findPath(linkDistances, nodePath, origin, destination);
+     //for (int i = 0; i < nodePath.size(); i++){
+     //    cout << nodePath[i] << endl;
+     //}
+     //cout << nodePath.size() << endl;
+
+
      cout << "Verbose mode? (y/n): ";
      cin >> verbose;
 
+     int numOfPackets = packetNum;
 
-
-     for (int i = 0; i < numOfPackets; i++) {
+     for (int i = 0; i < packetNum; i++) {
           
+          randomizeDelay(numOfRouters);
+
           if (verbose == 'y') {
                
                cout << endl;
 
           }
 
-          
-
-          // Here the createRouters function establishes the 
-          // node connections
-          createRouters(numOfRouters, packetLoss);
-
-          
-          function2(linkDistances, numOfRouters);
-
-
-          nodePath = function3(linkDistances, nodePath, origin, destination);
-
-
-          function4(nodePath, numOfPackets, lostPackets, timeFinal, packetLoss, verbose);
-          
-
+          calcPacketLoss(nodePath, packetNum, lostPackets, timeFinal, packetLoss, verbose);
 
           packetInfo.push_back(make_pair(timeFinal, lostPackets));
-
-
-
 
           // Verbose mode shows the path the packets take and tells us if 
           // any packets are lost
@@ -101,36 +110,19 @@ int main()
                printPath(verbose, i, nodePath);
                cout << "Travel time: " << timeFinal << " ms" << endl;
                cout << lostPackets << " lost packet(s)" << endl;
-          }
-
-          // Reset processing and Queue delay to 0 using the class destructor
-          for (int k = 0; k < networkMesh.size(); k++) {
-
-               networkMesh[k]->~Router();
-
-          }
-               
-
-          networkMesh.clear();
-          nodePath.clear();
+          }    
      }
-
 
      if (verbose == 'n') {
-
-          printPath(verbose, numOfPackets, emptyVector);
-     
+          printPath(verbose, packetNum, emptyVector);
      }
 
-     
-     
-     
      return 0;
 }
 
 /* -----------------------------------------------------------------------------
-FUNCTION:          main() 
-DESCRIPTION:       Controls the flow of the program at the highest level
+FUNCTION:          createRouters() 
+DESCRIPTION:       
 RETURNS:           Nothing
 NOTES:             
 ------------------------------------------------------------------------------- */
@@ -150,66 +142,62 @@ void createRouters(int numOfRouters, double packetLoss)
      }
 
      networkMesh[0]->newLink(networkMesh[1], 1);
+     networkMesh[0]->newLink(networkMesh[2], 1);
+     networkMesh[0]->newLink(networkMesh[3], 1);
      networkMesh[0]->newLink(networkMesh[4], 1);
+     networkMesh[0]->newLink(networkMesh[9], 4);
+     networkMesh[0]->newLink(networkMesh[5], 2);
      networkMesh[1]->newLink(networkMesh[0], 1);
      networkMesh[1]->newLink(networkMesh[2], 1);
-     networkMesh[1]->newLink(networkMesh[5], 1);
+     networkMesh[1]->newLink(networkMesh[5], 2);
+     networkMesh[1]->newLink(networkMesh[6], 2);
+     networkMesh[2]->newLink(networkMesh[0], 1);
      networkMesh[2]->newLink(networkMesh[1], 1);
      networkMesh[2]->newLink(networkMesh[3], 1);
-     networkMesh[2]->newLink(networkMesh[6], 1);
+     networkMesh[2]->newLink(networkMesh[7], 2);
+     networkMesh[3]->newLink(networkMesh[0], 1);
      networkMesh[3]->newLink(networkMesh[2], 1);
-     networkMesh[3]->newLink(networkMesh[7], 1);
+     networkMesh[3]->newLink(networkMesh[4], 2);
+     networkMesh[3]->newLink(networkMesh[8], 2);
      networkMesh[4]->newLink(networkMesh[0], 1);
-     networkMesh[4]->newLink(networkMesh[5], 1);
-     networkMesh[4]->newLink(networkMesh[8], 1);
-     networkMesh[5]->newLink(networkMesh[1], 1);
-     networkMesh[5]->newLink(networkMesh[4], 1);
-     networkMesh[5]->newLink(networkMesh[6], 1);
-     networkMesh[5]->newLink(networkMesh[9], 1);
-     networkMesh[5]->newLink(networkMesh[10], 1);
-     networkMesh[6]->newLink(networkMesh[2], 1);
-     networkMesh[6]->newLink(networkMesh[5], 1);
-     networkMesh[6]->newLink(networkMesh[7], 1);
-     networkMesh[6]->newLink(networkMesh[10], 1);
-     networkMesh[7]->newLink(networkMesh[3], 1);
-     networkMesh[7]->newLink(networkMesh[6], 1);
-     networkMesh[7]->newLink(networkMesh[11], 1);
-     networkMesh[8]->newLink(networkMesh[4], 1);
-     networkMesh[8]->newLink(networkMesh[9], 1);
-     networkMesh[8]->newLink(networkMesh[12], 1);
-     networkMesh[9]->newLink(networkMesh[5], 1);
-     networkMesh[9]->newLink(networkMesh[8], 1);
-     networkMesh[9]->newLink(networkMesh[10], 1);
-     networkMesh[9]->newLink(networkMesh[13], 1);
-     networkMesh[10]->newLink(networkMesh[5], 1);
-     networkMesh[10]->newLink(networkMesh[6], 1);
-     networkMesh[10]->newLink(networkMesh[9], 1);
-     networkMesh[10]->newLink(networkMesh[11], 1);
-     networkMesh[10]->newLink(networkMesh[14], 1);
-     networkMesh[11]->newLink(networkMesh[7], 1);
-     networkMesh[11]->newLink(networkMesh[10], 1);
-     networkMesh[11]->newLink(networkMesh[15], 1);
-     networkMesh[12]->newLink(networkMesh[8], 1);
-     networkMesh[12]->newLink(networkMesh[13], 1);
-     networkMesh[13]->newLink(networkMesh[9], 1);
-     networkMesh[13]->newLink(networkMesh[12], 1);
-     networkMesh[13]->newLink(networkMesh[14], 1);
-     networkMesh[14]->newLink(networkMesh[10], 1);
-     networkMesh[14]->newLink(networkMesh[13], 1);
-     networkMesh[14]->newLink(networkMesh[15], 1);
-     networkMesh[15]->newLink(networkMesh[11], 1);
-     networkMesh[15]->newLink(networkMesh[14], 1);
-
+     networkMesh[4]->newLink(networkMesh[3], 2);
+     networkMesh[4]->newLink(networkMesh[8], 3);
+     networkMesh[4]->newLink(networkMesh[9], 2);
+     networkMesh[5]->newLink(networkMesh[0], 2);
+     networkMesh[5]->newLink(networkMesh[1], 2);
+     networkMesh[5]->newLink(networkMesh[6], 3);
+     networkMesh[6]->newLink(networkMesh[1], 2);
+     networkMesh[6]->newLink(networkMesh[5], 3);
+     networkMesh[6]->newLink(networkMesh[7], 4);
+     networkMesh[6]->newLink(networkMesh[11], 1);
+     networkMesh[7]->newLink(networkMesh[2], 2);
+     networkMesh[7]->newLink(networkMesh[6], 4);
+     networkMesh[7]->newLink(networkMesh[8], 4);
+     networkMesh[7]->newLink(networkMesh[12], 1);
+     networkMesh[8]->newLink(networkMesh[3], 2);
+     networkMesh[8]->newLink(networkMesh[4], 3);
+     networkMesh[8]->newLink(networkMesh[7], 4);
+     networkMesh[8]->newLink(networkMesh[13], 1);
+     networkMesh[9]->newLink(networkMesh[0], 4);
+     networkMesh[9]->newLink(networkMesh[4], 2);
+     networkMesh[9]->newLink(networkMesh[14], 2);
+     networkMesh[10]->newLink(networkMesh[5], 2);
+     networkMesh[10]->newLink(networkMesh[14], 6);
+     networkMesh[11]->newLink(networkMesh[6], 1);
+     networkMesh[12]->newLink(networkMesh[7], 1);
+     networkMesh[13]->newLink(networkMesh[8], 1);
+     networkMesh[14]->newLink(networkMesh[9], 2);
+     networkMesh[14]->newLink(networkMesh[10], 6);
 
 }
 
 /* -----------------------------------------------------------------------------
-FUNCTION:          main() 
-DESCRIPTION:       Controls the flow of the program at the highest level
+FUNCTION:          routerDistances() 
+DESCRIPTION:       
 RETURNS:           Nothing
 NOTES:             
 ------------------------------------------------------------------------------- */
-void function2(vector<vector<pair<int, int> > > &linkDistances, int numOfRouters) 
+void routerDistances(vector<vector<pair<int, int> > > &linkDistances, int numOfRouters) 
 {
      double dDist = 0;
 
@@ -217,25 +205,24 @@ void function2(vector<vector<pair<int, int> > > &linkDistances, int numOfRouters
      for (int x = 0; x < numOfRouters; x++) {
 
           int totalLinks = networkMesh[x]->routerLinks.size();
+          //cout << totalLinks << endl;
           linkDistances.push_back(vector<pair<int, int> >());
-          
+
           for (int y = 0; y < totalLinks; y++) {
 
                dDist = networkMesh[x]->routerLinks[y].second;
                linkDistances[x].push_back(make_pair(networkMesh[x]->routerLinks[y].first->getID(), dDist));
           }
      }
-
-
 }
 
 /* -----------------------------------------------------------------------------
-FUNCTION:          main() 
-DESCRIPTION:       Controls the flow of the program at the highest level
+FUNCTION:          findPath() 
+DESCRIPTION:       
 RETURNS:           vector<int>
 NOTES:             
 ------------------------------------------------------------------------------- */
-vector<int> function3(vector<vector<pair<int, int> > > &linkDistances, vector<int> &nodePath, int origin, int destination) 
+vector<int> findPath(vector<vector<pair<int, int> > > &linkDistances, vector<int> &nodePath, int origin, int destination) 
 {
      
      vector<pair<int, int> > pathInfo = dijkstra(origin, destination, linkDistances);
@@ -250,30 +237,30 @@ vector<int> function3(vector<vector<pair<int, int> > > &linkDistances, vector<in
           prevRouter = pathInfo[prevRouter].second;
           nodePath.push_back(prevRouter);
      }
-
      return nodePath;
-
 }
 
 /* -----------------------------------------------------------------------------
-FUNCTION:          main() 
-DESCRIPTION:       Controls the flow of the program at the highest level
+FUNCTION:          calcPacketLoss() 
+DESCRIPTION:       
 RETURNS:           Nothing
 NOTES:             
 ------------------------------------------------------------------------------- */
-void function4(vector<int> &nodePath, int &numOfPackets, int &lostPackets, double &timeFinal, double &packetLoss, char verbose) 
+void calcPacketLoss(vector<int> &nodePath, int numOfPackets, int &lostPackets, double &timeFinal, double &packetLoss, char verbose) 
 {
      Router * parent;
      Router * child;
-     
+          
      int randProb;
      int droppedRouter = 0;
+     int droppedRouterRollover = 0;
      bool lost = 0;
-     double timer;
+     double timer = 0;
      int packetSize = 256;
-     
+     lostPackets = 0;
+     timeFinal = 0.0;
+          
      for (int x = nodePath.size() - 2; x > 0; x--) {
-               
           randProb = (rand() % 101);
           
           if (randProb < packetLoss * 100) {
@@ -289,8 +276,12 @@ void function4(vector<int> &nodePath, int &numOfPackets, int &lostPackets, doubl
                }
           
                if (verbose == 'y') {
-
-                    cout << "Lost packet! From " << nodePath[droppedRouter] << " to " << nodePath[droppedRouter-1] << "." << endl;
+                    if (0 > droppedRouter-1) {
+                         cout << "Lost packet! From " << nodePath[droppedRouter+1] << " to " << nodePath[droppedRouter] << "." << endl;
+                    }
+                    else {
+                         cout << "Lost packet! From " << nodePath[droppedRouter] << " to " << nodePath[droppedRouter-1] << "." << endl;
+                    }
                }
                
                lost = 1;
@@ -301,26 +292,31 @@ void function4(vector<int> &nodePath, int &numOfPackets, int &lostPackets, doubl
           timer = parent->timeOfTravel(child, packetSize);
           
           if (lost) {
-               
                x++;
                lostPackets++;
                lost = 0;
           }
 
-          else if (numOfPackets > 1) {
-               
-               numOfPackets--;
-               x++;
-          }
-
           timeFinal += timer;
      }
-
 }
 
 /* -----------------------------------------------------------------------------
-FUNCTION:          main() 
-DESCRIPTION:       Controls the flow of the program at the highest level
+FUNCTION:          randomizeDelay() 
+DESCRIPTION:       
+RETURNS:           Nothing
+NOTES:             
+------------------------------------------------------------------------------- */
+void randomizeDelay(int numOfRouters) 
+{
+     for (int i = 0; i < numOfRouters; i++) {
+          networkMesh[i]->randomizeVariables();
+     }
+}
+
+/* -----------------------------------------------------------------------------
+FUNCTION:          dijkstra() 
+DESCRIPTION:       
 RETURNS:           Nothing
 NOTES:             
 ------------------------------------------------------------------------------- */
@@ -374,8 +370,8 @@ vector<pair<int, int> > dijkstra(int startID, int destination, vector<vector<pai
 }
 
 /* -----------------------------------------------------------------------------
-FUNCTION:          main() 
-DESCRIPTION:       Controls the flow of the program at the highest level
+FUNCTION:          printPath() 
+DESCRIPTION:       
 RETURNS:           Nothing
 NOTES:             
 ------------------------------------------------------------------------------- */
@@ -400,7 +396,6 @@ void printPath(char verbose, int numOfPackets, vector<int> nodePath)
                     
           
           for (int x = 0; x < numOfPackets; x++) {
-
                cout << x + 1 << "\t" << packetInfo[x].first << "\t\t" << packetInfo[x].second << endl;
           }
      }

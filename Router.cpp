@@ -129,7 +129,17 @@ int Router::getID()
      return ID;
 }
 
-
+/* -----------------------------------------------------------------------------
+FUNCTION:          randomizeVariables() 
+DESCRIPTION:       
+RETURNS:           void
+NOTES:             
+------------------------------------------------------------------------------- */
+void Router::randomizeVariables()  
+{
+     delayProcessing = ((rand() % 1000) / 1000.0);
+     delayQueueing = ((rand() % 1000) / 1000.0);
+}
 
 
 

@@ -44,6 +44,7 @@ class Router
           double internalDelay();
           double timeOfTravel(Router * dest, int packetSize);
           int getID();
+          void randomizeVariables();
 
           
 };
