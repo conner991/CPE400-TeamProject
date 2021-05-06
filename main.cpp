@@ -51,7 +51,20 @@ int main()
      cout << "---------- Routing Simulator -----------" << endl;
      cout << "The network has " << numOfRouters << " nodes (routers)." << endl;
      cout << "Specify number of packets to send: ";
-     cin >> packetNum;
+
+     // Error handling for user input on number of packets
+     try {
+          cin >> packetNum;
+          if (packetNum > 0) {
+          }
+          else {
+               throw "Invalid number of packets.  Defaulting to 1";
+          }
+     }
+     catch(const char* msg) {
+          cerr << msg << endl;
+          packetNum = 1;
+     }
 
      // Here the createRouters function establishes the 
      // node connections
@@ -64,11 +77,44 @@ int main()
      routerDistances(linkDistances, numOfRouters);
 
      // receive Source router and destination router from user
-     cout << "Origin ID: ";
-     cin >> origin;
+     cout << "Origin ID (starts at 0): ";
+     // Error handling for user inputs of router ID's
+     try {
+          cin >> origin;
+          if (origin >= 0 && origin < numOfRouters) {
+          }
+          else {
+               throw "Invalid Router ID.  Defaulting to Router 0";
+          }
+     }
+     catch(const char* msg) {
+          cerr << msg << endl;
+          origin = 0;
+     }
      
-     cout << "Destination ID: ";
-     cin >> destination;
+     cout << "Destination ID (ends at " << numOfRouters-1 << "): ";
+     // Error handling for user inputs of router ID's
+     try {
+          cin >> destination;
+          if (origin == destination) {
+               throw (true);
+          }
+          else if (destination >= 0 && destination < numOfRouters) {
+          }
+          else {
+               throw "Invalid Router ID.  Defaulting to Router 14";
+          }
+     }
+     catch(const char* msg) {
+          cerr << msg << endl;
+          destination = 14;
+     }
+     catch(bool value){
+          cerr << "Same Router given as Source and Destination" << endl;
+          cerr << "Source set to 0, Destination set to 14" << endl;
+          origin = 0;
+          destination = 14;
+     }
 
      // findPath is the function that determines the shortest viable path from source to destination
      // algorithm utilizes Djikstra for node comparisons
@@ -79,7 +125,19 @@ int main()
 
      // Determine from user if program should show additional info
      cout << "Show path information and packet loss locations? (y/n): ";
-     cin >> verbose;
+     // Error handling
+     try {
+          cin >> verbose;
+          if (verbose == 'y' || verbose == 'n') {
+          }
+          else {
+               throw "Invalid input. Defaulting to 'n'";
+          }
+     }
+     catch(const char* msg) {
+          cerr << msg << endl;
+          verbose = 'n';
+     }
 
      // variable to be manipulated later without modifying max packet amount
      int numOfPackets = packetNum;
