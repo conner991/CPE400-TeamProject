@@ -14,11 +14,9 @@ NOTES:
 #include <climits>
 #include <set>
 
-#define MAX(x, y) ((x) > (y) ? (x) : (y))
-#define ARRAY_SIZE(a) sizeof(a)/sizeof(a[0])
-
 using namespace std;
 
+// Router class that contains basic information on delays
 class Router
 {
      private:

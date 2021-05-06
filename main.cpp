@@ -14,11 +14,17 @@ vector<pair<double, int> > packetInfo;
 
 // Prototypes
 vector<pair<int, int> > dijkstra(int startID, int dest, vector<vector<pair<int, int> > > routerLinks);
+
 void printPath(char v, int i, vector<int> nodePath);
+
 void createRouters(int numOfRouters, double packetLoss);
+
 void routerDistances(vector<vector<pair<int, int> > > &linkDistances, int numOfRouters);
+
 vector<int> findPath(vector<vector<pair<int, int> > > &linkDistances, vector<int> &nodePath, int origin, int destination);
+
 void calcPacketLoss(vector<int> &nodePath, int numOfPackets, int &lostPackets, double &timeFinal, double &packetLoss, char verbose);
+
 void randomizeDelay(int numOfRouters);
 
 /* -----------------------------------------------------------------------------
@@ -41,56 +47,49 @@ int main()
      char input, verbose;
 
 
-
-
-
-     cout << "---------- Dynamic Routing Simulator -----------" << endl;
-     cout << "The network will be generated with " << numOfRouters << " nodes." << endl;
-     cout << "Change number of packets to send? Default 1. (y/n): ";
-     cin >> input;
-
-     if (input == 'y') {
-          
-          cout << "Packets to send: ";
-          cin >> packetNum;
-     }
+     //Program header, gives instruction to user about packets and node number
+     cout << "---------- Routing Simulator -----------" << endl;
+     cout << "The network has " << numOfRouters << " nodes (routers)." << endl;
+     cout << "Specify number of packets to send: ";
+     cin >> packetNum;
 
      // Here the createRouters function establishes the 
      // node connections
-     //createRouters(numOfRouters, packetLoss);
+     // numOfRouters is the amount of routers in the network
+     // packetLoss is the const variable determining the chance of a packet being lost
      createRouters(numOfRouters, packetLoss);
-     //for (int i = 0; i < networkMesh.size(); i++){
-     //     cout << networkMesh[i]->getID() << endl;
-     //}
-
+     
+     // routerDistances function applies distance values to each of the router links
+     // linkDistances is a vector of vector pairs that specifies the link distances between each router ID
      routerDistances(linkDistances, numOfRouters);
-     /*for (int i = 0; i < linkDistances.size(); i++){
-          cout << networkMesh[i]->getID() << endl;
-          for (int j = 0; j < linkDistances[i].size(); j++){
-               cout << linkDistances[i][j].first << ", " << linkDistances[i][j].second << endl;
-          }
-     }*/
 
+     // receive Source router and destination router from user
      cout << "Origin ID: ";
      cin >> origin;
      
      cout << "Destination ID: ";
      cin >> destination;
 
+     // findPath is the function that determines the shortest viable path from source to destination
+     // algorithm utilizes Djikstra for node comparisons
+     // nodePath variable is a vector containing nodes used in path solution
+     // origin is origin node
+     // destination is destination node
      nodePath = findPath(linkDistances, nodePath, origin, destination);
-     //for (int i = 0; i < nodePath.size(); i++){
-     //    cout << nodePath[i] << endl;
-     //}
-     //cout << nodePath.size() << endl;
 
-
-     cout << "Verbose mode? (y/n): ";
+     // Determine from user if program should show additional info
+     cout << "Show path information and packet loss locations? (y/n): ";
      cin >> verbose;
 
+     // variable to be manipulated later without modifying max packet amount
      int numOfPackets = packetNum;
 
+     // The main for loop
+     // iterates an amount equivalent to the user provided packet amount to be sent
+     // at each iteration determines if a packet is lost, where it's lost, and time to travel
      for (int i = 0; i < packetNum; i++) {
           
+          // function to randomize the queue delay and processing delay at each router
           randomizeDelay(numOfRouters);
 
           if (verbose == 'y') {
@@ -99,12 +98,16 @@ int main()
 
           }
 
+          // function to calculate the packet loss at each loop iteration
+          // lostPackets is a variable that returns the amount of packets lost through full path traversal
+          // timeFinal returns the total amount of time a packet took from src to dest
+          // packetLoss is the base probability for a packet to be lost
+          // verbose is whether the user requested more info
           calcPacketLoss(nodePath, packetNum, lostPackets, timeFinal, packetLoss, verbose);
 
           packetInfo.push_back(make_pair(timeFinal, lostPackets));
 
-          // Verbose mode shows the path the packets take and tells us if 
-          // any packets are lost
+          // Outputs more information to the user
           if (verbose == 'y') {
                
                printPath(verbose, i, nodePath);
@@ -113,6 +116,7 @@ int main()
           }    
      }
 
+     // Print statement to let user know some information about packets
      if (verbose == 'n') {
           printPath(verbose, packetNum, emptyVector);
      }
@@ -122,7 +126,7 @@ int main()
 
 /* -----------------------------------------------------------------------------
 FUNCTION:          createRouters() 
-DESCRIPTION:       
+DESCRIPTION:       creates the router networkMesh vector
 RETURNS:           Nothing
 NOTES:             
 ------------------------------------------------------------------------------- */
@@ -130,7 +134,6 @@ void createRouters(int numOfRouters, double packetLoss)
 {
      double bandwidth = 1500;
      double dProp = 1;
-
 
      // Here all the router nodes are created and will have the 
      // same speed propogation, loss probability, and bandwidth.
@@ -141,6 +144,9 @@ void createRouters(int numOfRouters, double packetLoss)
           networkMesh.push_back(temp);
      }
 
+     // Full networkLink graph generation
+     // leftmost networkMesh determines origin node
+     // newLink determines which node it goes to, and the second int is the distance between the two nodes
      networkMesh[0]->newLink(networkMesh[1], 1);
      networkMesh[0]->newLink(networkMesh[2], 1);
      networkMesh[0]->newLink(networkMesh[3], 1);
@@ -193,21 +199,23 @@ void createRouters(int numOfRouters, double packetLoss)
 
 /* -----------------------------------------------------------------------------
 FUNCTION:          routerDistances() 
-DESCRIPTION:       
+DESCRIPTION:       Applies the given distances to a linkDistance vector that maintains the information moving forward
 RETURNS:           Nothing
 NOTES:             
 ------------------------------------------------------------------------------- */
 void routerDistances(vector<vector<pair<int, int> > > &linkDistances, int numOfRouters) 
 {
+     // initial distance variable
      double dDist = 0;
 
-
+     // For loop to iterate through all networkMesh class objects and pull the distance values
      for (int x = 0; x < numOfRouters; x++) {
 
+          // Provides total number of links between nodes
           int totalLinks = networkMesh[x]->routerLinks.size();
-          //cout << totalLinks << endl;
           linkDistances.push_back(vector<pair<int, int> >());
 
+          // Second for loop that applies link distances
           for (int y = 0; y < totalLinks; y++) {
 
                dDist = networkMesh[x]->routerLinks[y].second;
@@ -218,31 +226,35 @@ void routerDistances(vector<vector<pair<int, int> > > &linkDistances, int numOfR
 
 /* -----------------------------------------------------------------------------
 FUNCTION:          findPath() 
-DESCRIPTION:       
+DESCRIPTION:       Uses Djikstra to find the shortest path between source and destination nodes
 RETURNS:           vector<int>
 NOTES:             
 ------------------------------------------------------------------------------- */
 vector<int> findPath(vector<vector<pair<int, int> > > &linkDistances, vector<int> &nodePath, int origin, int destination) 
 {
-     
+     // Maintains Djikstra path information
      vector<pair<int, int> > pathInfo = dijkstra(origin, destination, linkDistances);
      
+     // Keeps previous router record to apply to path Info for source and destination management
      int prevRouter = pathInfo[destination].second;
      
      nodePath.push_back(destination);
      nodePath.push_back(prevRouter);
 
+     // Iterate until no more nodes to move to
      while (prevRouter != -1) {
 
           prevRouter = pathInfo[prevRouter].second;
           nodePath.push_back(prevRouter);
      }
+
+     // returns the updated nodePath vector
      return nodePath;
 }
 
 /* -----------------------------------------------------------------------------
 FUNCTION:          calcPacketLoss() 
-DESCRIPTION:       
+DESCRIPTION:       Function that takes a number of variables to calculate whether packets are lost, where they are lost, and the time it takes
 RETURNS:           Nothing
 NOTES:             
 ------------------------------------------------------------------------------- */
@@ -250,7 +262,8 @@ void calcPacketLoss(vector<int> &nodePath, int numOfPackets, int &lostPackets, d
 {
      Router * parent;
      Router * child;
-          
+
+     // variables that need to be reset on each new function call
      int randProb;
      int droppedRouter = 0;
      int droppedRouterRollover = 0;
@@ -260,25 +273,34 @@ void calcPacketLoss(vector<int> &nodePath, int numOfPackets, int &lostPackets, d
      lostPackets = 0;
      timeFinal = 0.0;
           
+     // for loop that iterates through nodePath
      for (int x = nodePath.size() - 2; x > 0; x--) {
+          
+          // initial random chance to determine if a packet will be lost
           randProb = (rand() % 101);
           
+          // if checks for situations where packet is lost, and when a packet is not lost
           if (randProb < packetLoss * 100) {
                
+               // Base case
                if (numOfPackets == 1) {
 
                     droppedRouter = x;
                }
 
+               // If a packet is lost, randomly choose a router to have 'dropped' the packet
                else {
 
                     droppedRouter = rand() % (nodePath.size() - 2);
                }
           
+               // If user requested more information
                if (verbose == 'y') {
+                    // Covers an exception for when a src and dest node are right next to each other.  Prevents code from outputting a -1 indexed node
                     if (0 > droppedRouter-1) {
                          cout << "Lost packet! From " << nodePath[droppedRouter+1] << " to " << nodePath[droppedRouter] << "." << endl;
                     }
+                    // All other situations
                     else {
                          cout << "Lost packet! From " << nodePath[droppedRouter] << " to " << nodePath[droppedRouter-1] << "." << endl;
                     }
@@ -287,28 +309,32 @@ void calcPacketLoss(vector<int> &nodePath, int numOfPackets, int &lostPackets, d
                lost = 1;
           }
 
+          // Calculates the time it takes for a packet to go from one node to the next
           parent = networkMesh[nodePath[x]];
           child = networkMesh[nodePath[x-1]];
           timer = parent->timeOfTravel(child, packetSize);
           
+          // if a packet is lost, try to resend and iterate through again
           if (lost) {
                x++;
                lostPackets++;
                lost = 0;
           }
 
+          // return the final time it took for a node to traverse from src to dest
           timeFinal += timer;
      }
 }
 
 /* -----------------------------------------------------------------------------
 FUNCTION:          randomizeDelay() 
-DESCRIPTION:       
+DESCRIPTION:       Rerandomizes the queue and processing delays in each router
 RETURNS:           Nothing
 NOTES:             
 ------------------------------------------------------------------------------- */
 void randomizeDelay(int numOfRouters) 
 {
+     // loop to iterate through networkMesh and randomize variables
      for (int i = 0; i < numOfRouters; i++) {
           networkMesh[i]->randomizeVariables();
      }
@@ -316,8 +342,8 @@ void randomizeDelay(int numOfRouters)
 
 /* -----------------------------------------------------------------------------
 FUNCTION:          dijkstra() 
-DESCRIPTION:       
-RETURNS:           Nothing
+DESCRIPTION:       standard dijkstra algorithm
+RETURNS:           vector<pair<int, int>>
 NOTES:             
 ------------------------------------------------------------------------------- */
 vector<pair<int, int> > dijkstra(int startID, int destination, vector<vector<pair<int, int> > > routerLinks)
@@ -371,29 +397,23 @@ vector<pair<int, int> > dijkstra(int startID, int destination, vector<vector<pai
 
 /* -----------------------------------------------------------------------------
 FUNCTION:          printPath() 
-DESCRIPTION:       
+DESCRIPTION:       terminal print out statements to provide user with information
 RETURNS:           Nothing
 NOTES:             
 ------------------------------------------------------------------------------- */
 void printPath(char verbose, int numOfPackets, vector<int> nodePath)
 {
      if (verbose == 'y') {
-
           cout << nodePath[nodePath.size() - 2];
-
           for (int x = nodePath.size() - 3; x >= 0; x--) {
-
                cout << " -> " << nodePath[x];
           }
 
           cout << endl;
      }
-
-     else {
-          
+     else {    
           cout.precision(5);
-          cout << "#\tTime\t\tLost  " << endl << "----------------------------" << endl;
-                    
+          cout << "#\tTime\t\tLost  " << endl << "----------------------------" << endl;         
           
           for (int x = 0; x < numOfPackets; x++) {
                cout << x + 1 << "\t" << packetInfo[x].first << "\t\t" << packetInfo[x].second << endl;

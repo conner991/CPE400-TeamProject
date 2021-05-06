@@ -19,7 +19,7 @@ NOTES:
 ------------------------------------------------------------------------------- */
 Router::Router()
 {
-     //TODO: Change variables to better reflect timeOfTravel() variables
+     // All variables will get overwritten when router class objects are created
      ID = -1;
      delayProcessing = ((rand() % 1000) / 1000.0);
      delayTransmission = 0;
@@ -57,14 +57,12 @@ NOTES:
 ------------------------------------------------------------------------------- */
 Router::~Router()
 {
-     //routerLinks.clear();
-     delayProcessing = 0;
-     delayQueueing = 0;
+
 }
 
 /* -----------------------------------------------------------------------------
 FUNCTION:          newLink() 
-DESCRIPTION:       
+DESCRIPTION:       creates a new link pair when called
 RETURNS:           Nothing
 NOTES:             
 ------------------------------------------------------------------------------- */
@@ -75,7 +73,7 @@ void Router::newLink(Router * newRouter, int length)
 
 /* -----------------------------------------------------------------------------
 FUNCTION:          internalDelay() 
-DESCRIPTION:       
+DESCRIPTION:       calculates the internal delay of a router
 RETURNS:           double
 NOTES:             
 ------------------------------------------------------------------------------- */
@@ -90,7 +88,7 @@ double Router::internalDelay()
 
 /* -----------------------------------------------------------------------------
 FUNCTION:          timeOfTravel() 
-DESCRIPTION:       
+DESCRIPTION:       calculates the time taken for a packet to travel from one node to the next
 RETURNS:           double
 NOTES:             
 ------------------------------------------------------------------------------- */
@@ -108,19 +106,16 @@ double Router::timeOfTravel(Router * dest, int packetSize)
                //Propagation: length / speed
                delayTransmission = packetSize/bandwidth;
                delayPropagation = routerLinks[x].second/speedPropagation;
-               return (delayProcessing + delayQueueing + delayPropagation + delayTransmission); //Router found
+
+               // returns the total time taken as a double
+               return (delayProcessing + delayQueueing + delayPropagation + delayTransmission);
           }
      }
-
-     //Router not found
-     cout << "The packet was not able to find a path to the specified router." << endl;
-
-
 }
 
 /* -----------------------------------------------------------------------------
 FUNCTION:          getID() 
-DESCRIPTION:       
+DESCRIPTION:       gets the unique ID of a router
 RETURNS:           int
 NOTES:             
 ------------------------------------------------------------------------------- */
@@ -131,17 +126,15 @@ int Router::getID()
 
 /* -----------------------------------------------------------------------------
 FUNCTION:          randomizeVariables() 
-DESCRIPTION:       
-RETURNS:           void
+DESCRIPTION:       randomizes the private member variables
+RETURNS:           nothing
 NOTES:             
 ------------------------------------------------------------------------------- */
-void Router::randomizeVariables()  
+void Router::randomizeVariables() 
 {
      delayProcessing = ((rand() % 1000) / 1000.0);
      delayQueueing = ((rand() % 1000) / 1000.0);
 }
-
-
 
 
 #endif
